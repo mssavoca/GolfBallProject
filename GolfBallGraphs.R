@@ -92,16 +92,16 @@ ML = ggplot(Mass_loss, aes(x = Mass.loss..g., fill = Stage, colour = Stage)) +
 ML
 
 # Violin or boxlpot plot of mass loss by stage
-ML_V = ggplot(Mass_loss, aes(x = Stage, y = log(Mass.loss..g.), fill = Stage, colour = Stage)) +
+ML_V = ggplot(Mass_loss, aes(x = Stage, y = Mass.loss..mg., fill = Stage, colour = Stage)) +
     geom_violin(alpha = 0.3) +
-    #geom_boxplot(alpha = 0.3) +
     geom_jitter(width = 0.25, alpha = 0.5) +
     coord_flip() +
-    # xlim(-1, 10) +
+    #ylim(2, 10) +
     xlab("Stage") +
-    ylab("Log of mass loss") +
+    ylab("Log of Mass Loss (mg)") +
     ggtitle("Golf Ball Mass Loss by Degradation Stage") +
-    theme(plot.title = element_text(hjust = 0.5))
+    theme(plot.title = element_text(hjust = 0.5)) +
+    theme(axis.text=element_text(size=11))
 
 
 #ggMarginal(ML,aes(x=Mass.loss..g.), 
