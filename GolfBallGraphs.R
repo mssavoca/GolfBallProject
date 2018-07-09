@@ -8,6 +8,7 @@ library(tidyr)
 library(scales)
 library(ggExtra)
 library(dplyr)
+library(scales)
 
 knitr::opts_chunk$set(message = FALSE, warning = FALSE, fig.show = "animate")
 # Example from https://github.com/dgrtwo/gganimate
@@ -75,6 +76,7 @@ fit <- aov(m1)
 # pie and line charts of ball staging by date and subsite
 ##############
 BS_D_SS$Date = as.Date(BS_D_SS$Date, format='%m/%d/%y')
+BS_D_SS$Stage = as.factor(BS_D_SS$Stage)
 
 # create a dataframe where each subsite gets an average ball number and proportion per stage
 pie_chart_data <- filter(BS_D_SS, Site == "PB") %>%
@@ -82,6 +84,26 @@ pie_chart_data <- filter(BS_D_SS, Site == "PB") %>%
   summarise(Ave.Num = mean(Num.in.stage), 
             Ave.Prop = mean(Prop.in.stage)) 
 
+blank_theme <- theme_minimal()+
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.border = element_blank(),
+    panel.grid=element_blank(),
+    axis.ticks = element_blank(),
+    plot.title=element_text(size=14, face="bold")
+  )
+
+try.at.pie <- ggplot(pie_chart_data, aes(x="", y=Ave.Prop, fill=Stage))+
+  geom_bar(width = 1, stat = "identity", position = "fill") +
+  coord_polar("y", start=0) +
+  blank_theme +
+  facet_grid(.~Subsite) +
+  scale_fill_brewer(palette="RdYlBu") +
+  theme(axis.text.x=element_blank()) #+
+#  geom_text(aes(y = Ave.Num/5 + c(0, cumsum(Ave.Num)[-length(Ave.Num)]), 
+#                label = percent(Ave.Num/100)), size=5)
+try.at.pie
 
 
 BS_date_subsite <- ggplot(data=BS_D_SS, aes(Date, Prop.Stage.5, color = Subsite)) +
