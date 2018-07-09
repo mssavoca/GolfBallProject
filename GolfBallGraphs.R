@@ -2,7 +2,7 @@
 # Script to graph golf ball data
 #####
 
-#load packages
+#load packages ----
 library(ggplot2); theme_set(theme_bw())
 library(tidyr)
 library(scales)
@@ -18,6 +18,7 @@ library(gganimate)
 
 GB = read.csv("GolfBallsbySite.csv")
 BS = read.csv("BallStage.csv")
+BS_D_SS = read.csv("BallStageByDateAndSite_Tidy.csv")
 GB_full = read.csv("GolfBallsComplete.csv")
 Mass_loss = read.csv("BallMassLoss.csv")
 Mass_loss$Stage = as.factor(Mass_loss$Stage)
@@ -46,14 +47,47 @@ GB_RR
 
 
 # bar plot of ball degredation stage
-ball_stage <-ggplot(BS, aes(Ball.Stage, Number)) + 
-                      geom_bar(stat = "identity") +
-                      xlab("Ball stage") +
+BS$Season <- as.factor(BS$Season) 
+BS$Ball.Stage <- as.factor(BS$Ball.Stage) 
+
+ball_stage_num <-ggplot(BS, aes(Ball.Stage, Number)) + 
+  scale_color_manual(c("darkolivegreen4","deepskyblue4")) +
+                      geom_bar(aes(fill = Season), stat = "identity", position = "stack", color) +
+                      xlab("Ball stage") + ylab("Total number") +
                       theme_bw()
 
-ball_stage
+ball_stage_num
+
+ball_stage_prop <-ggplot(BS, aes(Ball.Stage, Prop.within.season)) + 
+  geom_bar(aes(fill = Season), stat = "identity", position = "dodge") +
+  xlab("Ball stage") + ylab("Proportion of total (within season)") +
+  theme_bw()
+
+ball_stage_prop
+
+# ANOVA on this
+m1 <- lm(Number ~ Season*Ball.Stage, data=BS)
+fit <- aov(m1)
 
 # should also do above plot by weight loss by stage
+
+##############
+# pie and line charts of ball staging by date and subsite
+##############
+BS_D_SS$Date = as.Date(BS_D_SS$Date, format='%m/%d/%y')
+
+# create a dataframe where each subsite gets an average ball number and proportion per stage
+pie_chart_data <- filter(BS_D_SS, Site == "PB") %>%
+  group_by(Subsite, Stage) %>%
+  summarise(Ave.Num = mean(Num.in.stage), 
+            Ave.Prop = mean(Prop.in.stage)) 
+
+
+
+BS_date_subsite <- ggplot(data=BS_D_SS, aes(Date, Prop.Stage.5, color = Subsite)) +
+  geom_line()
+
+BS_date_subsite
 
 
 # plot of mass by stage
@@ -92,7 +126,7 @@ ML = ggplot(Mass_loss, aes(x = Mass.loss..g., fill = Stage, colour = Stage)) +
 ML
 
 # Violin or boxlpot plot of mass loss by stage
-ML_V = ggplot(Mass_loss, aes(x = Stage, y = Mass.loss..mg., fill = Stage, colour = Stage)) +
+ML_V = ggplot(Mass_loss, aes(x = Stage, y = log(Mass.loss..g.), fill = Stage, colour = Stage)) +
     geom_violin(alpha = 0.3) +
     geom_jitter(width = 0.25, alpha = 0.5) +
     coord_flip() +
@@ -148,6 +182,8 @@ GB_plot + geom_point()
 GB_plot = ggplot(GB, aes(x=Date, y = Number, color = Subsite) + geom_point() # +
                 scale_x_date(format = "%b-%Y")) +scale_color_manual("")
 
+BS_date_subsite <- ggplot(data=BS_D_SS, aes(Date, Prop.Stage.5, color = Subsite)) +
+  geom_line()
 
 #geom_jitter(aes(colour = Stage)) +
 #geom_boxplot(aes(x=Mass.loss..g., y = Stage) )+
