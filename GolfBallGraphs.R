@@ -23,6 +23,7 @@ BS_D_SS = read.csv("BallStageByDateAndSite_Tidy.csv")
 GB_full = read.csv("GolfBallsComplete.csv")
 Mass_loss = read.csv("BallMassLoss.csv")
 Mass_loss$Stage = as.factor(Mass_loss$Stage)
+Mass_loss$mg_Lost = Mass_loss$Mass.loss..g.*1000
 
 
 # this plot works, all data
@@ -52,17 +53,20 @@ BS$Season <- as.factor(BS$Season)
 BS$Ball.Stage <- as.factor(BS$Ball.Stage) 
 
 ball_stage_num <-ggplot(BS, aes(Ball.Stage, Number)) + 
-  scale_color_manual(c("darkolivegreen4","deepskyblue4")) +
-                      geom_bar(aes(fill = Season), stat = "identity", position = "stack", color) +
-                      xlab("Ball stage") + ylab("Total number") +
-                      theme_bw()
+  #scale_fill_brewer(palette="BuGu") +
+  geom_bar(aes(fill = Season), stat = "identity", position = "stack") +
+  xlab("Ball stage") + ylab("Total number") +
+  theme(axis.text.x = element_text(size=12), axis.text.y = element_text(size=12),  
+        axis.title.x = element_text(size=14),
+        axis.title.y = element_text(size=14))
+
 
 ball_stage_num
 
 ball_stage_prop <-ggplot(BS, aes(Ball.Stage, Prop.within.season)) + 
   geom_bar(aes(fill = Season), stat = "identity", position = "dodge") +
   xlab("Ball stage") + ylab("Proportion of total (within season)") +
-  theme_bw()
+  theme_bw(text = element_text(size=20))
 
 ball_stage_prop
 
@@ -81,7 +85,8 @@ BS_D_SS$Stage = as.factor(BS_D_SS$Stage)
 # create a dataframe where each subsite gets an average ball number and proportion per stage
 pie_chart_data <- filter(BS_D_SS, Site == "PB") %>%
   group_by(Subsite, Stage) %>%
-  summarise(Ave.Num = mean(Num.in.stage), 
+  summarise(Total.Num = sum(Num.in.stage),
+            Ave.Num = mean(Num.in.stage), 
             Ave.Prop = mean(Prop.in.stage)) 
 
 blank_theme <- theme_minimal()+
@@ -94,16 +99,20 @@ blank_theme <- theme_minimal()+
     plot.title=element_text(size=14, face="bold")
   )
 
-try.at.pie <- ggplot(pie_chart_data, aes(x="", y=Ave.Prop, fill=Stage))+
-  geom_bar(width = 1, stat = "identity", position = "fill") +
+## Order
+try.at.pie$Stage <- ordered(try.at.pie$Stage, levels = c("5", "4", "3", "2","1"))
+try.at.pie <- ggplot(pie_chart_data, aes(x = "", y=Ave.Prop, fill=Stage))+
+  geom_bar(width = 1, stat = "identity", position = "fill", alpha = 0.9) +
+  scale_fill_manual(values = c("#E76BF3", "#00B0F6", "#00BF7D","#A3A500","#F8766D")) +
   coord_polar("y", start=0) +
   blank_theme +
   facet_grid(.~Subsite) +
-  scale_fill_brewer(palette="RdYlBu") +
   theme(axis.text.x=element_blank()) #+
 #  geom_text(aes(y = Ave.Num/5 + c(0, cumsum(Ave.Num)[-length(Ave.Num)]), 
 #                label = percent(Ave.Num/100)), size=5)
+
 try.at.pie
+
 
 
 BS_date_subsite <- ggplot(data=BS_D_SS, aes(Date, Prop.Stage.5, color = Subsite)) +
@@ -147,23 +156,28 @@ ML = ggplot(Mass_loss, aes(x = Mass.loss..g., fill = Stage, colour = Stage)) +
 
 ML
 
+## Order
+Mass_loss$Stage <- ordered(Mass_loss$Stage, levels = c("5", "4", "3", "2","1"))
+
 # Violin or boxlpot plot of mass loss by stage
-ML_V = ggplot(Mass_loss, aes(x = Stage, y = log(Mass.loss..g.), fill = Stage, colour = Stage)) +
+ML_V = ggplot(Mass_loss, aes(x = Stage, y = log(mg_Lost), fill = Stage, colour = Stage)) +
     geom_violin(alpha = 0.3) +
     geom_jitter(width = 0.25, alpha = 0.5) +
     coord_flip() +
-    #ylim(2, 10) +
+    ylim(1.5, 11) +
     xlab("Stage") +
     ylab("Log of Mass Loss (mg)") +
-    ggtitle("Golf Ball Mass Loss by Degradation Stage") +
+   # ggtitle("Golf Ball Mass Loss by Degradation Stage") +
     theme(plot.title = element_text(hjust = 0.5)) +
-    theme(axis.text=element_text(size=11))
-
-
-#ggMarginal(ML,aes(x=Mass.loss..g.), 
-#                type = "boxplot", fill="transparent") #doesnt look great, prob bc this is a histogram and not a scatterplot
+    theme(axis.text.x = element_text(size=12), axis.text.y = element_text(size=12),  
+        axis.title.x = element_text(size=14),
+        axis.title.y = element_text(size=14))
 
 ML_V
+
+# Extracting the colors used for Violin plot above to use in pir chart
+g <- ggplot_build(ML_V)
+unique(g$data[[1]]["fill"])
 
 info = ggplot_build(ML)$data
 
@@ -211,3 +225,7 @@ BS_date_subsite <- ggplot(data=BS_D_SS, aes(Date, Prop.Stage.5, color = Subsite)
 #geom_boxplot(aes(x=Mass.loss..g., y = Stage) )+
 #geom_point(aes(x = Mass.loss..g., y = 0, colour = Stage)) +
 #rug(jitter(Mass_loss$Mass.loss..g., y = 0)) +
+
+#ggMarginal(ML,aes(x=Mass.loss..g.), 
+#                type = "boxplot", fill="transparent") #doesnt look great, prob bc this is a histogram and not a scatterplot
+
