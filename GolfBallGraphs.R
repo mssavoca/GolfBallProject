@@ -101,6 +101,7 @@ blank_theme <- theme_minimal()+
 
 ## Order
 try.at.pie$Stage <- ordered(try.at.pie$Stage, levels = c("5", "4", "3", "2","1"))
+
 try.at.pie <- ggplot(pie_chart_data, aes(x = "", y=Ave.Prop, fill=Stage))+
   geom_bar(width = 1, stat = "identity", position = "fill", alpha = 0.9) +
   scale_fill_manual(values = c("#E76BF3", "#00B0F6", "#00BF7D","#A3A500","#F8766D")) +
@@ -160,10 +161,10 @@ ML
 Mass_loss$Stage <- ordered(Mass_loss$Stage, levels = c("5", "4", "3", "2","1"))
 
 # Violin or boxlpot plot of mass loss by stage
-ML_V = ggplot(Mass_loss, aes(x = Stage, y = log(mg_Lost), fill = Stage, colour = Stage)) +
-    geom_violin(alpha = 0.3) +
-    geom_jitter(width = 0.25, alpha = 0.5) +
-    coord_flip() +
+ML_V = ggplot(Mass_loss, aes(x = Stage, y = log(mg_Lost), fill = Stage)) +
+    geom_violin(alpha = 0.5) +
+    geom_jitter(width = 0.25, alpha = 0.3) +
+    scale_fill_manual(values = c("#006D2C", "#31A354", "#74C476","#BAE4B3","#EDF8E9")) +
     ylim(1.5, 11) +
     xlab("Stage") +
     ylab("Log of Mass Loss (mg)") +
@@ -171,9 +172,13 @@ ML_V = ggplot(Mass_loss, aes(x = Stage, y = log(mg_Lost), fill = Stage, colour =
     theme(plot.title = element_text(hjust = 0.5)) +
     theme(axis.text.x = element_text(size=12), axis.text.y = element_text(size=12),  
         axis.title.x = element_text(size=14),
-        axis.title.y = element_text(size=14))
+        axis.title.y = element_text(size=14)) +
+    theme(legend.position="none")
 
-ML_V
+ML_V + coord_flip()
+
+
+, fill = Stage, colour = Stage)
 
 # Extracting the colors used for Violin plot above to use in pir chart
 g <- ggplot_build(ML_V)
